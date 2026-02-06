@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Query Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 32px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="email"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="email"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .fields-container {
+            display: none;
+        }
+
+        .fields-container.active {
+            display: block;
+        }
+
+        .field-item {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .field-item:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .field-item.selected {
+            border-color: #667eea;
+            background: #e8eeff;
+        }
+
+        .field-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .field-item label {
+            margin: 0;
+            font-weight: 500;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .counter {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: inline-block;
+        }
+
+        .counter.warning {
+            background: #ff9800;
+        }
+
+        .counter.max {
+            background: #f44336;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 16px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .response-container {
+            display: none;
+            margin-top: 24px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .response-container.active {
+            display: block;
+        }
+
+        .response-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .response-json {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 12px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .back-button {
+            background: #6c757d;
+            margin-top: 8px;
+        }
+
+        .error {
+            color: #f44336;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Data Query Interface</h1>
+        <p class="subtitle">Select your email and the fields you want to retrieve</p>
+
+        <!-- Email Input Step -->
+        <div id="emailStep">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" placeholder="Enter your email address" required>
+                <div id="emailError" class="error"></div>
+            </div>
+            <button id="continueBtn">Continue to Field Selection</button>
+        </div>
+
+        <!-- Field Selection Step -->
+        <div id="fieldStep" class="fields-container">
+            <div class="counter" id="counter">Selected: 0/7</div>
+            
+            <div class="form-group">
+                <label>Select up to 7 fields:</label>
+                
+                <div class="field-item" data-field="registrationtime">
+                    <input type="checkbox" id="field_registrationtime" value="registrationtime">
+                    <label for="field_registrationtime">Registration Time</label>
+                </div>
+
+                <div class="field-item" data-field="eventTime">
+                    <input type="checkbox" id="field_eventTime" value="eventTime">
+                    <label for="field_eventTime">Event Time</label>
+                </div>
+
+                <div class="field-item" data-field="id">
+                    <input type="checkbox" id="field_id" value="id">
+                    <label for="field_id">ID</label>
+                </div>
+
+                <div class="field-item" data-field="transaction_type">
+                    <input type="checkbox" id="field_transaction_type" value="transaction_type">
+                    <label for="field_transaction_type">Transaction Type (deposit, withdraw, transfer, all)</label>
+                </div>
+
+                <div class="field-item" data-field="transaction_method">
+                    <input type="checkbox" id="field_transaction_method" value="transaction_method">
+                    <label for="field_transaction_method">Transaction Method (wire, crypto, mobile, bank, card, all)</label>
+                </div>
+
+                <div class="field-item" data-field="status">
+                    <input type="checkbox" id="field_status" value="status">
+                    <label for="field_status">Status (approved, declined, pending, timeout, all)</label>
+                </div>
+
+                <div class="field-item" data-field="ftd">
+                    <input type="checkbox" id="field_ftd" value="ftd">
+                    <label for="field_ftd">FTD</label>
+                </div>
+
+                <div class="field-item" data-field="email_field">
+                    <input type="checkbox" id="field_email_field" value="email_field">
+                    <label for="field_email_field">Email</label>
+                </div>
+
+                <div class="field-item" data-field="kyc_status">
+                    <input type="checkbox" id="field_kyc_status" value="kyc_status">
+                    <label for="field_kyc_status">KYC Status</label>
+                </div>
+
+                <div class="field-item" data-field="country">
+                    <input type="checkbox" id="field_country" value="country">
+                    <label for="field_country">Country</label>
+                </div>
+
+                <div class="field-item" data-field="telephone">
+                    <input type="checkbox" id="field_telephone" value="telephone">
+                    <label for="field_telephone">Telephone</label>
+                </div>
+
+                <div class="field-item" data-field="balance">
+                    <input type="checkbox" id="field_balance" value="balance">
+                    <label for="field_balance">Balance</label>
+                </div>
+            </div>
+
+            <button id="submitBtn" disabled>Submit Query</button>
+            <button id="backBtn" class="back-button">Back to Email</button>
+        </div>
+
+        <!-- Response Display -->
+        <div id="responseContainer" class="response-container">
+            <div class="response-title">JSON Response:</div>
+            <div class="response-json" id="responseJson"></div>
+            <button id="newQueryBtn" class="back-button">New Query</button>
+        </div>
+    </div>
+
+    <script>
+        const emailInput = document.getElementById('email');
+        const continueBtn = document.getElementById('continueBtn');
+        const emailStep = document.getElementById('emailStep');
+        const fieldStep = document.getElementById('fieldStep');
+        const counter = document.getElementById('counter');
+        const submitBtn = document.getElementById('submitBtn');
+        const backBtn = document.getElementById('backBtn');
+        const responseContainer = document.getElementById('responseContainer');
+        const responseJson = document.getElementById('responseJson');
+        const newQueryBtn = document.getElementById('newQueryBtn');
+        const emailError = document.getElementById('emailError');
+        const fieldItems = document.querySelectorAll('.field-item');
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+
+        let selectedFields = [];
+
+        // Email validation
+        continueBtn.addEventListener('click', () => {
+            const email = emailInput.value.trim();
+            emailError.textContent = '';
+
+            if (!email) {
+                emailError.textContent = 'Please enter an email address';
+                return;
+            }
+
+            if (!isValidEmail(email)) {
+                emailError.textContent = 'Please enter a valid email address';
+                return;
+            }
+
+            emailStep.style.display = 'none';
+            fieldStep.classList.add('active');
+        });
+
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        // Field selection
+        fieldItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                if (e.target.type !== 'checkbox') {
+                    const checkbox = item.querySelector('input[type="checkbox"]');
+                    checkbox.click();
+                }
+            });
+        });
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateSelection);
+        });
+
+        function updateSelection() {
+            selectedFields = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+
+            const count = selectedFields.length;
+            counter.textContent = `Selected: ${count}/7`;
+
+            if (count === 0) {
+                counter.className = 'counter';
+                submitBtn.disabled = true;
+            } else if (count <= 5) {
+                counter.className = 'counter';
+                submitBtn.disabled = false;
+            } else if (count === 6) {
+                counter.className = 'counter warning';
+                submitBtn.disabled = false;
+            } else if (count === 7) {
+                counter.className = 'counter max';
+                submitBtn.disabled = false;
+            } else {
+                counter.className = 'counter max';
+                submitBtn.disabled = true;
+            }
+
+            // Disable unchecked boxes if max reached
+            checkboxes.forEach(cb => {
+                if (!cb.checked && count >= 7) {
+                    cb.disabled = true;
+                    cb.parentElement.style.opacity = '0.5';
+                } else {
+                    cb.disabled = false;
+                    cb.parentElement.style.opacity = '1';
+                }
+            });
+
+            // Update visual selection
+            fieldItems.forEach(item => {
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                if (checkbox.checked) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+        }
+
+        // Submit
+        submitBtn.addEventListener('click', () => {
+            const email = emailInput.value.trim();
+            const response = {
+                email: email
+            };
+
+            selectedFields.forEach((field, index) => {
+                response[`field${index + 1}`] = field;
+            });
+
+            // Display response
+            responseJson.textContent = JSON.stringify(response, null, 2);
+            fieldStep.classList.remove('active');
+            responseContainer.classList.add('active');
+
+            // This is where you'd send the actual request to your backend
+            // For Vercel deployment, you'd use fetch() to call your API endpoint
+            console.log('JSON Response:', response);
+        });
+
+        // Back button
+        backBtn.addEventListener('click', () => {
+            fieldStep.classList.remove('active');
+            emailStep.style.display = 'block';
+        });
+
+        // New query button
+        newQueryBtn.addEventListener('click', () => {
+            responseContainer.classList.remove('active');
+            emailStep.style.display = 'block';
+            emailInput.value = '';
+            checkboxes.forEach(cb => {
+                cb.checked = false;
+                cb.disabled = false;
+            });
+            fieldItems.forEach(item => {
+                item.classList.remove('selected');
+                item.style.opacity = '1';
+            });
+            selectedFields = [];
+            updateSelection();
+        });
+    </script>
+</body>
+</html>
