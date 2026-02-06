@@ -1,0 +1,8 @@
+{
+  "name": "telegram-query-interface",
+  "version": "1.0.0",
+  "description": "Query interface for Telegram mini app with n8n integration",
+  "dependencies": {
+    "@vercel/kv": "^1.0.1"
+  }
+}

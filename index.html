@@ -397,7 +397,7 @@
         }
 
         // Submit
-        submitBtn.addEventListener('click', () => {
+        submitBtn.addEventListener('click', async () => {
             const email = emailInput.value.trim();
             const response = {
                 email: email
@@ -407,14 +407,38 @@
                 response[`field${index + 1}`] = field;
             });
 
-            // Display response
-            responseJson.textContent = JSON.stringify(response, null, 2);
-            fieldStep.classList.remove('active');
-            responseContainer.classList.add('active');
+            try {
+                // Send to API endpoint
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Saving...';
 
-            // This is where you'd send the actual request to your backend
-            // For Vercel deployment, you'd use fetch() to call your API endpoint
-            console.log('JSON Response:', response);
+                const apiResponse = await fetch('/api/query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(response)
+                });
+
+                const result = await apiResponse.json();
+
+                if (apiResponse.ok) {
+                    // Display response
+                    responseJson.textContent = JSON.stringify(result.data, null, 2);
+                    fieldStep.classList.remove('active');
+                    responseContainer.classList.add('active');
+                } else {
+                    alert('Error: ' + result.error);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit Query';
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to save query. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Query';
+            }
         });
 
         // Back button
@@ -438,6 +462,7 @@
             });
             selectedFields = [];
             updateSelection();
+            submitBtn.textContent = 'Submit Query';
         });
     </script>
 </body>
