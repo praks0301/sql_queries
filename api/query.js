@@ -2,6 +2,12 @@
 
 let queryData = null; // In-memory storage (resets on cold start)
 
+export const config = {
+  api: {
+    bodyParser: true,
+  },
+};
+
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -18,6 +24,8 @@ export default async function handler(req, res) {
   // Handle POST - Store the query data
   if (req.method === 'POST') {
     try {
+      console.log('Received body:', req.body); // Debug log
+      
       const { email, ...fields } = req.body;
 
       if (!email) {
@@ -33,6 +41,8 @@ export default async function handler(req, res) {
         timestamp: new Date().toISOString()
       };
 
+      console.log('Stored data:', queryData); // Debug log
+
       return res.status(200).json({
         success: true,
         message: 'Query saved successfully',
@@ -40,6 +50,7 @@ export default async function handler(req, res) {
       });
 
     } catch (error) {
+      console.error('Error in POST:', error); // Debug log
       return res.status(500).json({ 
         error: 'Internal server error',
         message: error.message 
